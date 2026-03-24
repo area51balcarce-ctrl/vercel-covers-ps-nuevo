@@ -6,7 +6,6 @@ const TGDB_BASES = [
 const PLATFORM_PS4 = 4919;
 const PLATFORM_PS5 = 4980;
 
-// Links exactos para los títulos que ya sabés que existen y querés que salgan sí o sí
 const EXACT_OVERRIDES = {
   'ABZU': 'https://cdn.thegamesdb.net/images/original/boxart/front/37561-1.jpg',
   'ALIEN INSOLATION THE COLLECTION': 'https://cdn.thegamesdb.net/images/original/boxart/front/78566-1.jpg',
@@ -57,11 +56,9 @@ function scoreMatch(input, candidate) {
 
   const words = a.split(/\s+/).filter(Boolean);
   let score = 0;
-
   for (const word of words) {
     if (b.includes(word)) score += 8;
   }
-
   return score;
 }
 
@@ -248,12 +245,10 @@ function resolverUrlCoverDesdeImages(data, gameId) {
 async function resolverCover(title, apiKey) {
   const limpio = normalize(limpiarTituloBase(title));
 
-  // primero: exactos conocidos
   if (EXACT_OVERRIDES[limpio]) {
     return { title, coverUrl: EXACT_OVERRIDES[limpio] };
   }
 
-  // después: búsqueda TGDB real
   const variants = generateVariants(title);
 
   for (const variant of variants) {
