@@ -6,17 +6,6 @@ const TGDB_BASES = [
 const PLATFORM_PS4 = 4919;
 const PLATFORM_PS5 = 4980;
 
-// ✅ overrides exactos para los títulos que YA sabés que existen
-const EXACT_OVERRIDES = {
-  'ABZU': 'https://cdn.thegamesdb.net/images/original/boxart/front/37561-1.jpg',
-  'ALIEN INSOLATION THE COLLECTION': 'https://cdn.thegamesdb.net/images/original/boxart/front/78566-1.jpg',
-  'ASSASSINS CREED ODYSSEY': 'https://cdn.thegamesdb.net/images/original/boxart/front/64193-1.jpg',
-  'ASSASSINS CREED ORIGINS': 'https://cdn.thegamesdb.net/images/original/boxart/front/74195-1.jpg',
-  'ASSASSINS CREED ROGUE REMASTERED': 'https://cdn.thegamesdb.net/images/original/boxart/front/100847-1.jpg',
-  'ASSASSINS CREED VALHALLA': 'https://cdn.thegamesdb.net/images/original/boxart/front/79875-1.jpg',
-  'ASTROBOT': 'https://cdn.thegamesdb.net/images/original/boxart/front/126795-1.jpg'
-};
-
 function normalize(str) {
   return String(str || '')
     .toUpperCase()
@@ -84,6 +73,20 @@ function generateVariants(title) {
     'ASSASSINS CREED MIRAGE': ["Assassin's Creed Mirage"],
     'ASSASSINS CREED UNITY': ["Assassin's Creed Unity"],
     'ASTROBOT': ['Astro Bot', 'Astrobot'],
+    'CRASH TEAM RACING NITRO FUELED': ['Crash Team Racing Nitro-Fueled'],
+    'CRISIS CORE FINAL FANTASY VII REUNION': ['Crisis Core Final Fantasy VII Reunion'],
+    'GTA V': ['Grand Theft Auto V', 'GTA 5'],
+    'GRAND THEFT AUTO V': ['Grand Theft Auto V', 'GTA V'],
+    'THE LAST OF US PART I': ['The Last of Us Part I'],
+    'THE LAST OF US PART II': ['The Last of Us Part II'],
+    'WORLD WAR Z AFTERMATH': ['World War Z Aftermath'],
+    'WRC 10 RALLY': ['WRC 10'],
+    'WRC 10': ['WRC 10'],
+    'YU GI OH LEGACY OF THE DUELIST': ['Yu-Gi-Oh! Legacy of the Duelist'],
+    'CALL OF DUTY MODERN WARFARE 3': ['Call of Duty Modern Warfare III', 'Modern Warfare 3'],
+    'CALL OF DUTY MODERN WARFARE 2': ['Call of Duty Modern Warfare II', 'Modern Warfare 2'],
+    'CALL OF DUTY BLACK OPS 3': ['Call of Duty Black Ops III'],
+    'CALL OF DUTY BLACK OPS 4': ['Call of Duty Black Ops 4'],
     'ABZU': ['ABZU']
   };
 
@@ -133,7 +136,7 @@ async function tgdbFetch(path, apiKey) {
     try {
       return await fetchJson(url);
     } catch (_) {
-      // sigue con la otra base
+      // prueba con la otra base
     }
   }
   return null;
@@ -232,14 +235,6 @@ function resolverUrlCoverDesdeImages(data, gameId) {
 }
 
 async function resolverCover(title, apiKey) {
-  const limpio = normalize(limpiarTituloBase(title));
-
-  // ✅ primero: override exacto
-  if (EXACT_OVERRIDES[limpio]) {
-    return { title, coverUrl: EXACT_OVERRIDES[limpio] };
-  }
-
-  // ✅ segundo: intentar TGDB normal
   const variants = generateVariants(title);
 
   for (const variant of variants) {
