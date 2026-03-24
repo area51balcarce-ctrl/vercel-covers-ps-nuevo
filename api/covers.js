@@ -9,23 +9,25 @@ export default async function handler(req, res) {
 
     for (const rawTitle of titles) {
 
+      // 🔥 LIMPIEZA PRO
       const limpio = rawTitle
         .replace(/PS4|PS5|PS4-PS5/gi, "")
-        .replace(/[^\w\s]/gi, "")
+        .replace(/[^a-zA-Z0-9 ]/g, "")
+        .replace(/\b(the|edition|remastered|collection)\b/gi, "")
+        .replace(/\s+/g, " ")
         .trim()
         .toLowerCase();
 
       let cover = null;
 
       try {
-        const url = `https://api.rawg.io/api/games?search=${encodeURIComponent(limpio)}&page_size=5`;
+        const url = `https://api.rawg.io/api/games?search=${encodeURIComponent(limpio)}&page_size=10`;
 
         const r = await fetch(url);
         const data = await r.json();
 
         if (data.results && data.results.length > 0) {
 
-          // 🔥 BUSCAR MEJOR MATCH
           let best = null;
           let bestScore = 0;
 
@@ -34,9 +36,14 @@ export default async function handler(req, res) {
 
             let score = 0;
 
-            if (name === limpio) score += 100;
-            if (name.includes(limpio)) score += 50;
-            if (limpio.includes(name)) score += 30;
+            const words = limpio.split(" ");
+
+            for (const w of words) {
+              if (name.includes(w)) score += 10;
+            }
+
+            if (name === limpio) score += 50;
+            if (name.includes(limpio)) score += 30;
 
             if (score > bestScore) {
               bestScore = score;
@@ -44,21 +51,16 @@ export default async function handler(req, res) {
             }
           }
 
-          if (best) {
+          if (best && best.background_image) {
             cover = best.background_image;
           }
         }
 
       } catch (e) {}
 
-      // fallback SIEMPRE válido
-      if (!cover) {
-        cover = `https://images.igdb.com/igdb/image/upload/t_cover_big/co1tmu.jpg`;
-      }
-
       results.push({
         title: rawTitle,
-        coverUrl: cover
+        coverUrl: cover || null // ❌ sin fallback trucho
       });
     }
 
