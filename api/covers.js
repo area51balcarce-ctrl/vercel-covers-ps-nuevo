@@ -4,69 +4,70 @@ export default async function handler(req, res) {
   }
 
   try {
-    const titles = req.body.titles || [];
+    const titles = Array.isArray(req.body?.titles) ? req.body.titles : [];
     const results = [];
 
     for (const rawTitle of titles) {
-
-      // 🔥 LIMPIEZA PRO
       const limpio = rawTitle
         .replace(/PS4|PS5|PS4-PS5/gi, "")
-        .replace(/[^a-zA-Z0-9 ]/g, "")
+        .replace(/[^\w\s]/gi, "")
         .replace(/\b(the|edition|remastered|collection)\b/gi, "")
         .replace(/\s+/g, " ")
-        .trim()
-        .toLowerCase();
+        .trim();
 
       let cover = null;
 
-      try {
-        const url = `https://api.rawg.io/api/games?search=${encodeURIComponent(limpio)}&page_size=10`;
+      // Si más adelante conseguís RAWG key, va acá.
+      const rawgKey = process.env.RAWG_API_KEY;
 
-        const r = await fetch(url);
-        const data = await r.json();
+      if (rawgKey) {
+        try {
+          const url = `https://api.rawg.io/api/games?search=${encodeURIComponent(limpio)}&page_size=10&key=${rawgKey}`;
+          const r = await fetch(url);
+          const data = await r.json();
 
-        if (data.results && data.results.length > 0) {
+          if (Array.isArray(data?.results) && data.results.length > 0) {
+            let best = null;
+            let bestScore = -1;
+            const limpioLower = limpio.toLowerCase();
 
-          let best = null;
-          let bestScore = 0;
+            for (const game of data.results) {
+              const name = String(game.name || "").toLowerCase();
+              let score = 0;
 
-          for (const game of data.results) {
-            const name = game.name.toLowerCase();
+              if (name === limpioLower) score += 100;
+              if (name.includes(limpioLower)) score += 40;
 
-            let score = 0;
+              for (const word of limpioLower.split(" ")) {
+                if (word && name.includes(word)) score += 10;
+              }
 
-            const words = limpio.split(" ");
-
-            for (const w of words) {
-              if (name.includes(w)) score += 10;
+              if (score > bestScore) {
+                bestScore = score;
+                best = game;
+              }
             }
 
-            if (name === limpio) score += 50;
-            if (name.includes(limpio)) score += 30;
-
-            if (score > bestScore) {
-              bestScore = score;
-              best = game;
+            if (best?.background_image) {
+              cover = best.background_image;
             }
           }
+        } catch (_) {}
+      }
 
-          if (best && best.background_image) {
-            cover = best.background_image;
-          }
-        }
-
-      } catch (e) {}
+      // Sin tapa real: devolver búsqueda lista para abrir
+      if (!cover) {
+        cover = `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(limpio + " ps4 ps5 portada")}`;
+      }
 
       results.push({
         title: rawTitle,
-        coverUrl: cover || null // ❌ sin fallback trucho
+        coverUrl: cover
       });
     }
 
-    res.status(200).json({ results });
-
+    return res.status(200).json({ results });
   } catch (err) {
-    res.status(500).json({ error: "Error interno" });
+    return res.status(500).json({ error: "Error interno" });
   }
 }
