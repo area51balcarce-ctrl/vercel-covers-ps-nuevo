@@ -109,13 +109,27 @@ function generateVariants(title) {
   return Array.from(variants).filter(Boolean);
 }
 
-async function fetchJson(url) {
+async function fetchJson(url, apiKey) {
   const res = await fetch(url, {
     headers: {
       Accept: 'application/json',
-      'User-Agent': 'Mozilla/5.0 AREA51 Covers'
+      'User-Agent': 'Mozilla/5.0 AREA51 Covers',
+      Authorization: `Bearer ${apiKey}`
     }
   });
+
+  const text = await res.text();
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}: ${text.slice(0, 180)}`);
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`Respuesta no JSON: ${text.slice(0, 180)}`);
+  }
+}
 
   const text = await res.text();
 
@@ -134,7 +148,7 @@ async function tgdbFetch(path, apiKey) {
   for (const base of TGDB_BASES) {
     const url = `${base}${path}${path.includes('?') ? '&' : '?'}apikey=${encodeURIComponent(apiKey)}`;
     try {
-      return await fetchJson(url);
+      return await fetchJson(url, apiKey);
     } catch (_) {
       // prueba con la otra base
     }
